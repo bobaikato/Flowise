@@ -23,13 +23,22 @@
 name: test-ota-contract-matrix
 
 on:
+  workflow_dispatch:
+    inputs:
+      ota_repository:
+        description: Ota source repository to build for this matrix run
+        required: false
+        default: ota-run/ota
+      ota_ref:
+        description: Ota branch, tag, or commit to build for this matrix run
+        required: false
+        default: bobai/gap3-smoke-verdict-contract
   push:
     branches:
       - main
   pull_request:
     branches:
       - '*'
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -49,15 +58,15 @@ jobs:
             workflow: app:docker
             runtime_proof: true
     env:
-      OTA_VERSION: v1.6.16
       PUPPETEER_SKIP_DOWNLOAD: true
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Ota
-        run: |
-          curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION="${OTA_VERSION}" sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install ota from source
+        uses: ota-run/ota/.github/actions/install-ota-from-source@v1.6.16
+        with:
+          repository: ${{ github.event.inputs.ota_repository || 'ota-run/ota' }}
+          ref: ${{ github.event.inputs.ota_ref || 'bobai/gap3-smoke-verdict-contract' }}
 
       - name: Contract pre-run gates (JSON)
         run: |
