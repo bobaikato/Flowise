@@ -89,15 +89,19 @@ jobs:
           ota up --dry-run --json . | tee "${matrix_dir}/up-dry-run.json"
           up_status=${PIPESTATUS[0]}
 
+          ota up --workflow verify --container --dry-run --json . | tee "${matrix_dir}/up-verify-container-dry-run.json"
+          up_verify_container_status=${PIPESTATUS[0]}
+
           {
             echo "validate_status=${validate_status}"
             echo "tasks_status=${tasks_status}"
             echo "topology_status=${topology_status}"
             echo "run_status=${run_status}"
             echo "up_status=${up_status}"
+            echo "up_verify_container_status=${up_verify_container_status}"
           } > "${matrix_dir}/status.env"
 
-          if [ "${validate_status}" -ne 0 ] || [ "${tasks_status}" -ne 0 ] || [ "${topology_status}" -ne 0 ] || [ "${run_status}" -ne 0 ] || [ "${up_status}" -ne 0 ]; then
+          if [ "${validate_status}" -ne 0 ] || [ "${tasks_status}" -ne 0 ] || [ "${topology_status}" -ne 0 ] || [ "${run_status}" -ne 0 ] || [ "${up_status}" -ne 0 ] || [ "${up_verify_container_status}" -ne 0 ]; then
             exit 1
           fi
 

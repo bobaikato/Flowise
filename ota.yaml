@@ -11,6 +11,20 @@ execution:
   contexts:
     host:
       backend: native
+    app:
+      backend: container
+      lifecycle: ephemeral
+      container:
+        image: node:20-bookworm
+        engines:
+          - docker
+          - podman
+      attachments:
+        isolated_paths:
+          - node_modules
+          - .pnpm-store
+          - .turbo
+          - packages/server/dist
 toolchains:
   node:
     provider: corepack
@@ -564,6 +578,7 @@ agent:
     Use `ota up --workflow app --native .` for contributor development.
     Use `ota up --workflow app:prod --native .` for local built startup validation.
     Use `ota up --workflow verify --native .` for CI-equivalent verification.
+    Use `ota up --workflow verify --container .` for the containerized CI-equivalent verify path.
     Use `ota up --workflow app:docker --native .`, `ota up --workflow app:docker:queue --native .`,
     and `ota up --workflow worker:docker --native .` for documented compose runtime paths.
     No tasks are agent-safe by default in this slice.

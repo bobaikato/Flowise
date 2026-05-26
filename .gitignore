@@ -119,4 +119,7 @@ apps/*/
 .claude/plans/
 .claude/settings.local.json
 .claude/agent-memory/*
-
+# Ota local artifacts
+.ota/state/
+.ota/receipts/
+.ota/proof/
