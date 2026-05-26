@@ -107,7 +107,6 @@ tasks:
     effects:
       writes:
         - packages/server/.env
-    safe_for_agent: false
   setup:env:ui:
     context: host
     description: Create the UI env file from template when missing
@@ -122,7 +121,6 @@ tasks:
     effects:
       writes:
         - packages/ui/.env
-    safe_for_agent: false
   setup:env:docker:
     context: host
     description: Create docker env file from template when missing
@@ -137,7 +135,6 @@ tasks:
     effects:
       writes:
         - docker/.env
-    safe_for_agent: false
   setup:env:worker:
     context: host
     description: Create worker docker env file from template when missing
@@ -152,7 +149,6 @@ tasks:
     effects:
       writes:
         - docker/worker/.env
-    safe_for_agent: false
   install:
     context: host
     description: Install monorepo dependencies with pnpm
@@ -165,7 +161,6 @@ tasks:
         - node
     effects:
       network: true
-    safe_for_agent: false
   lint:
     context: host
     description: Run repository lint checks
@@ -180,7 +175,6 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-    safe_for_agent: false
   build:
     context: host
     description: Build all monorepo packages through turbo
@@ -197,7 +191,6 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-    safe_for_agent: false
   typecheck:
     context: host
     description: Run compile-time typechecking surfaces through package build scripts
@@ -215,7 +208,6 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-    safe_for_agent: false
   test:
     context: host
     description: Run monorepo test surfaces through turbo
@@ -230,7 +222,6 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-    safe_for_agent: false
   test:coverage:
     context: host
     description: Run monorepo test coverage surface
@@ -245,7 +236,6 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-    safe_for_agent: false
   verify:ci:
     context: host
     description: Run the root CI verification core sequence
@@ -264,7 +254,6 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-    safe_for_agent: false
   verify:ci:full:
     context: host
     description: Run a CLI-equivalent full CI verification path including Cypress
@@ -286,7 +275,6 @@ tasks:
       - install
     effects:
       network: true
-    safe_for_agent: false
   start:
     context: host
     description: Start Flowise production server from built artifacts
@@ -311,7 +299,6 @@ tasks:
           project:
             host:
               primary: true
-    safe_for_agent: false
   dev:
     context: host
     description: Start Flowise monorepo development servers
@@ -339,7 +326,6 @@ tasks:
           project:
             host:
               primary: true
-    safe_for_agent: false
   dev:docker:
     context: host
     description: Run Flowise from the documented Docker compose stack
@@ -366,7 +352,6 @@ tasks:
           project:
             host:
               primary: true
-    safe_for_agent: false
   dev:docker:queue:
     context: host
     description: Run Flowise queue mode from prebuilt Docker images
@@ -394,7 +379,6 @@ tasks:
           project:
             host:
               primary: true
-    safe_for_agent: false
   dev:docker:worker:
     context: host
     description: Run the standalone Flowise worker container compose stack
@@ -421,7 +405,6 @@ tasks:
           project:
             host:
               primary: true
-    safe_for_agent: false
 workflows:
   default: app
   verify:
@@ -571,12 +554,16 @@ agent:
     - ota.yaml
   bootstrap:
     ota:
-      note: Install ota only when it is missing and installation is approved.
+      note: Install ota when missing so contributors and agents can run the readiness workflows declared in this contract.
       sh: curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION=v1.6.16 sh
       powershell: $env:OTA_VERSION='v1.6.16'; irm https://dist.ota.run/install.ps1 | iex
   notes: |
-    This pressure-test contract intentionally stays on documented repo entrypoints:
-    root pnpm install/build/dev/start/test/lint and documented Docker compose flows.
-    It does not model release/publish workflows or cloud deployment guides in this slice.
-    Agent-safe task claims are intentionally empty in this slice because verification tasks
-    transitively depend on install/networked dependency hydration.
+    Use `ota tasks --use .` to list runnable tasks and review the agent-safe surface before execution.
+    Use `ota run setup:env:server .`, `ota run setup:env:docker .`, and
+    `ota run setup:env:worker .` to create env files from templates only when missing.
+    Use `ota up --workflow app --native .` for contributor development.
+    Use `ota up --workflow app:prod --native .` for local built startup validation.
+    Use `ota up --workflow verify --native .` for CI-equivalent verification.
+    Use `ota up --workflow app:docker --native .`, `ota up --workflow app:docker:queue --native .`,
+    and `ota up --workflow worker:docker --native .` for documented compose runtime paths.
+    No tasks are agent-safe by default in this slice.
