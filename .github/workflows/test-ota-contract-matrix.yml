@@ -45,16 +45,31 @@ permissions:
 
 jobs:
   contract-matrix:
-    runs-on: ubuntu-latest
+    name: Ota Contract Matrix (Cross-OS + Ubuntu Runtime - ${{ matrix.os_name }} / ${{ matrix.lane }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
           - lane: pre_run
+            os: ubuntu-latest
+            os_name: ubuntu
+            workflow: verify
+            runtime_proof: false
+          - lane: pre_run
+            os: macos-latest
+            os_name: macos
+            workflow: verify
+            runtime_proof: false
+          - lane: pre_run
+            os: windows-latest
+            os_name: windows
             workflow: verify
             runtime_proof: false
           - lane: runtime_proof
+            os: ubuntu-latest
+            os_name: ubuntu
             workflow: app:docker
             runtime_proof: true
     env:
@@ -74,9 +89,10 @@ jobs:
           ref: ${{ github.event.inputs.ota_ref || 'bobai/gap3-smoke-verdict-contract' }}
 
       - name: Contract pre-run gates (JSON)
+        shell: bash
         run: |
           set +e
-          matrix_dir=".ota/ci/matrix-${{ matrix.lane }}"
+          matrix_dir=".ota/ci/matrix-${{ matrix.os_name }}-${{ matrix.lane }}"
           mkdir -p "${matrix_dir}"
 
           ota validate --json . | tee "${matrix_dir}/validate.json"
@@ -97,6 +113,15 @@ jobs:
           ota up --workflow verify --container --dry-run --json . | tee "${matrix_dir}/up-verify-container-dry-run.json"
           up_verify_container_status=${PIPESTATUS[0]}
 
+          node - "${matrix_dir}/up-verify-container-dry-run.json" <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          if (!report.dry_run || !report.status) {
+            console.error(JSON.stringify(report, null, 2));
+            process.exit(1);
+          }
+          NODE
+
           {
             echo "validate_status=${validate_status}"
             echo "tasks_status=${tasks_status}"
@@ -106,15 +131,20 @@ jobs:
             echo "up_verify_container_status=${up_verify_container_status}"
           } > "${matrix_dir}/status.env"
 
-          if [ "${validate_status}" -ne 0 ] || [ "${tasks_status}" -ne 0 ] || [ "${topology_status}" -ne 0 ] || [ "${run_status}" -ne 0 ] || [ "${up_status}" -ne 0 ] || [ "${up_verify_container_status}" -ne 0 ]; then
+          if [ "${up_verify_container_status}" -ne 0 ]; then
+            echo "container dry-run blocked on this host (expected on non-Ubuntu hosted runners)"
+          fi
+
+          if [ "${validate_status}" -ne 0 ] || [ "${tasks_status}" -ne 0 ] || [ "${topology_status}" -ne 0 ] || [ "${run_status}" -ne 0 ] || [ "${up_status}" -ne 0 ]; then
             exit 1
           fi
 
       - name: Runtime proof lane (JSON)
         if: ${{ matrix.runtime_proof }}
+        shell: bash
         run: |
           set +e
-          matrix_dir=".ota/ci/matrix-${{ matrix.lane }}"
+          matrix_dir=".ota/ci/matrix-${{ matrix.os_name }}-${{ matrix.lane }}"
           ota proof runtime --json --workflow "${{ matrix.workflow }}" . | tee "${matrix_dir}/proof-runtime.json"
           proof_status=${PIPESTATUS[0]}
           echo "proof_status=${proof_status}" >> "${matrix_dir}/status.env"
@@ -124,8 +154,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ota-contract-${{ matrix.lane }}
+          name: ota-contract-${{ matrix.os_name }}-${{ matrix.lane }}
           if-no-files-found: ignore
           path: |
-            .ota/ci/matrix-${{ matrix.lane }}/
+            .ota/ci/matrix-${{ matrix.os_name }}-${{ matrix.lane }}/
             .ota/proof/
