@@ -62,6 +62,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Node.js 20.20.2
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.20.2
+
       - name: Install ota from source
         uses: ota-run/ota/.github/actions/install-ota-from-source@v1.6.16
         with:
