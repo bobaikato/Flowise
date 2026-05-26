@@ -149,6 +149,23 @@ tasks:
     effects:
       writes:
         - docker/.env
+  setup:env:docker:defaults:
+    context: host
+    description: Ensure Docker env has required persistence path defaults
+    notes: |
+      This seeds default paths required by Flowise Docker startup when they are absent.
+      It preserves existing values and only appends missing keys.
+    category: setup
+    run: |
+      sh -c 'if ! grep -Eq "^[[:space:]]*DATABASE_PATH=" docker/.env; then echo "DATABASE_PATH=/root/.flowise" >> docker/.env; fi
+      if ! grep -Eq "^[[:space:]]*LOG_PATH=" docker/.env; then echo "LOG_PATH=/root/.flowise/logs" >> docker/.env; fi
+      if ! grep -Eq "^[[:space:]]*SECRETKEY_PATH=" docker/.env; then echo "SECRETKEY_PATH=/root/.flowise" >> docker/.env; fi
+      if ! grep -Eq "^[[:space:]]*BLOB_STORAGE_PATH=" docker/.env; then echo "BLOB_STORAGE_PATH=/root/.flowise/storage" >> docker/.env; fi'
+    depends_on:
+      - setup:env:docker
+    effects:
+      writes:
+        - docker/.env
   setup:env:worker:
     context: host
     description: Create worker docker env file from template when missing
@@ -353,7 +370,7 @@ tasks:
       checks:
         - docker-env-configured
     depends_on:
-      - setup:env:docker
+      - setup:env:docker:defaults
     effects:
       network: true
       external_state:
@@ -380,7 +397,7 @@ tasks:
       checks:
         - docker-env-configured
     depends_on:
-      - setup:env:docker
+      - setup:env:docker:defaults
     effects:
       network: true
       external_state:

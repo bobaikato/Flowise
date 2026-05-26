@@ -45,7 +45,7 @@ permissions:
 
 jobs:
   contract-matrix:
-    name: Ota Contract Matrix (Cross-OS + Ubuntu Runtime - ${{ matrix.os_name }} / ${{ matrix.lane }})
+    name: Ota Contract Matrix (${{ matrix.mode_label }} - ${{ matrix.os_name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
@@ -55,21 +55,25 @@ jobs:
           - lane: pre_run
             os: ubuntu-latest
             os_name: ubuntu
+            mode_label: native+container-pre-run
             workflow: verify
             runtime_proof: false
           - lane: pre_run
             os: macos-latest
             os_name: macos
+            mode_label: native+container-pre-run
             workflow: verify
             runtime_proof: false
           - lane: pre_run
             os: windows-latest
             os_name: windows
+            mode_label: native+container-pre-run
             workflow: verify
             runtime_proof: false
           - lane: runtime_proof
             os: ubuntu-latest
             os_name: ubuntu
+            mode_label: container-runtime-proof
             workflow: app:docker
             runtime_proof: true
     env:
