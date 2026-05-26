@@ -1,0 +1,582 @@
+version: 1
+project:
+  name: Flowise
+  description: Flowise monorepo readiness slice covering the documented pnpm contributor path, root CI verification surface, and Docker self-host/service workflows
+  type: application
+metadata:
+  ota:
+    minimum_version: "1.6.16"
+execution:
+  default_context: host
+  contexts:
+    host:
+      backend: native
+toolchains:
+  node:
+    provider: corepack
+    version: "^20.20.2"
+    package_managers:
+      pnpm: "10.26.0"
+tools:
+  docker:
+    version: "*"
+    required: false
+surfaces:
+  api:
+    kind: http
+    port: 3000
+    path: /api/v1/ping
+    readiness:
+      kind: http
+      method: GET
+      path: /api/v1/ping
+      success:
+        status:
+          - 200
+      body:
+        contains: "pong"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 15s
+  app:
+    kind: http
+    port: 3000
+    path: /
+    readiness:
+      kind: http
+      method: GET
+      path: /
+      headers:
+        Accept: text/html
+      success:
+        status:
+          - 200
+      body:
+        contains: "<!DOCTYPE html>"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 20s
+  dev-ui:
+    kind: http
+    port: 8080
+    path: /
+    readiness:
+      kind: http
+      method: GET
+      path: /
+      headers:
+        Accept: text/html
+      success:
+        status:
+          - 200
+      body:
+        contains: "<!DOCTYPE html>"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 20s
+  worker:
+    kind: http
+    port: 5566
+    path: /healthz
+    readiness:
+      kind: http
+      method: GET
+      path: /healthz
+      success:
+        status:
+          - 200
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 20s
+tasks:
+  setup:env:server:
+    context: host
+    description: Create the server env file from template when missing
+    notes: |
+      This follows the contributor setup in README/CONTRIBUTING.
+      It only copies `packages/server/.env.example` when `packages/server/.env` is absent.
+    category: setup
+    action:
+      kind: copy_if_missing
+      from: packages/server/.env.example
+      to: packages/server/.env
+    effects:
+      writes:
+        - packages/server/.env
+    safe_for_agent: false
+  setup:env:ui:
+    context: host
+    description: Create the UI env file from template when missing
+    notes: |
+      This follows the contributor setup in README/CONTRIBUTING.
+      It only copies `packages/ui/.env.example` when `packages/ui/.env` is absent.
+    category: setup
+    action:
+      kind: copy_if_missing
+      from: packages/ui/.env.example
+      to: packages/ui/.env
+    effects:
+      writes:
+        - packages/ui/.env
+    safe_for_agent: false
+  setup:env:docker:
+    context: host
+    description: Create docker env file from template when missing
+    notes: |
+      This follows `docker/README.md`.
+      It only copies `docker/.env.example` when `docker/.env` is absent.
+    category: setup
+    action:
+      kind: copy_if_missing
+      from: docker/.env.example
+      to: docker/.env
+    effects:
+      writes:
+        - docker/.env
+    safe_for_agent: false
+  setup:env:worker:
+    context: host
+    description: Create worker docker env file from template when missing
+    notes: |
+      This follows `docker/worker/README.md`.
+      It only copies `docker/worker/.env.example` when `docker/worker/.env` is absent.
+    category: setup
+    action:
+      kind: copy_if_missing
+      from: docker/worker/.env.example
+      to: docker/worker/.env
+    effects:
+      writes:
+        - docker/worker/.env
+    safe_for_agent: false
+  install:
+    context: host
+    description: Install monorepo dependencies with pnpm
+    notes: |
+      This maps directly to the root setup path in README and CI.
+    category: setup
+    run: corepack pnpm install
+    requirements:
+      toolchains:
+        - node
+    effects:
+      network: true
+    safe_for_agent: false
+  lint:
+    context: host
+    description: Run repository lint checks
+    notes: |
+      This maps directly to root CI lint execution.
+    category: test
+    run: corepack pnpm lint
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    safe_for_agent: false
+  build:
+    context: host
+    description: Build all monorepo packages through turbo
+    notes: |
+      This maps to root contributor and CI build commands.
+    category: build
+    run: corepack pnpm build
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    safe_for_agent: false
+  typecheck:
+    context: host
+    description: Run compile-time typechecking surfaces through package build scripts
+    notes: |
+      Flowise does not expose a standalone `typecheck` script at the root.
+      The package build scripts are the authoritative TypeScript compile/typecheck surface.
+    category: test
+    run: corepack pnpm --filter ./packages/server build && corepack pnpm --filter flowise-components build && corepack pnpm --filter @flowiseai/agentflow build && corepack pnpm --filter @flowiseai/observe build && corepack pnpm --filter flowise-api build
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    safe_for_agent: false
+  test:
+    context: host
+    description: Run monorepo test surfaces through turbo
+    notes: |
+      This maps directly to root contributor and CI test shape.
+    category: test
+    run: corepack pnpm test
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    safe_for_agent: false
+  test:coverage:
+    context: host
+    description: Run monorepo test coverage surface
+    notes: |
+      This maps directly to the root CI coverage command in `.github/workflows/main.yml`.
+    category: test
+    run: corepack pnpm test:coverage
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    safe_for_agent: false
+  verify:ci:
+    context: host
+    description: Run the root CI verification core sequence
+    notes: |
+      This matches the core verification chain in `.github/workflows/main.yml`:
+      `pnpm lint`, `pnpm build`, then `pnpm test:coverage`.
+      Use `verify:ci:full` to include the Cypress lane from the same workflow.
+    category: test
+    run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    safe_for_agent: false
+  verify:ci:full:
+    context: host
+    description: Run a CLI-equivalent full CI verification path including Cypress
+    notes: |
+      This mirrors `.github/workflows/main.yml` core steps and adds the
+      repo-local Cypress CLI lane (`packages/server:cypress:ci`) as the
+      non-Action equivalent for end-to-end verification.
+    category: test
+    run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage && corepack pnpm cypress install && corepack pnpm --filter ./packages/server cypress:ci
+    env:
+      NODE_OPTIONS: "--max_old_space_size=4096"
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+    depends_on:
+      - install
+    effects:
+      network: true
+    safe_for_agent: false
+  start:
+    context: host
+    description: Start Flowise production server from built artifacts
+    notes: |
+      This is the documented local production startup path (`pnpm start`).
+    category: dev
+    run: corepack pnpm start
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+        - server-env-configured
+    depends_on:
+      - build
+      - setup:env:server
+    runtime:
+      kind: service
+      surfaces:
+        api: {}
+        app:
+          project:
+            host:
+              primary: true
+    safe_for_agent: false
+  dev:
+    context: host
+    description: Start Flowise monorepo development servers
+    notes: |
+      This maps directly to the documented contributor development loop (`pnpm dev`).
+      README documents UI at port 8080 and API server at port 3000.
+    category: dev
+    run: corepack pnpm dev
+    requirements:
+      toolchains:
+        - node
+      checks:
+        - workspace-dependencies-installed
+        - server-env-configured
+        - ui-env-configured
+    depends_on:
+      - install
+      - setup:env:server
+      - setup:env:ui
+    runtime:
+      kind: service
+      surfaces:
+        api: {}
+        dev-ui:
+          project:
+            host:
+              primary: true
+    safe_for_agent: false
+  dev:docker:
+    context: host
+    description: Run Flowise from the documented Docker compose stack
+    notes: |
+      This follows the `docker/README.md` path: `cd docker && docker compose up`.
+    category: dev
+    run: cd docker && docker compose up
+    requirements:
+      tools:
+        docker: "*"
+      checks:
+        - docker-env-configured
+    depends_on:
+      - setup:env:docker
+    effects:
+      network: true
+      external_state:
+        - docker
+    runtime:
+      kind: service
+      surfaces:
+        api: {}
+        app:
+          project:
+            host:
+              primary: true
+    safe_for_agent: false
+  dev:docker:queue:
+    context: host
+    description: Run Flowise queue mode from prebuilt Docker images
+    notes: |
+      This follows `docker/README.md` queue mode path:
+      `docker compose -f docker-compose-queue-prebuilt.yml up`.
+    category: dev
+    run: cd docker && docker compose -f docker-compose-queue-prebuilt.yml up
+    requirements:
+      tools:
+        docker: "*"
+      checks:
+        - docker-env-configured
+    depends_on:
+      - setup:env:docker
+    effects:
+      network: true
+      external_state:
+        - docker
+    runtime:
+      kind: service
+      surfaces:
+        api: {}
+        app:
+          project:
+            host:
+              primary: true
+    safe_for_agent: false
+  dev:docker:worker:
+    context: host
+    description: Run the standalone Flowise worker container compose stack
+    notes: |
+      This follows `docker/worker/README.md` path:
+      `cd docker/worker && docker compose up`.
+    category: dev
+    run: cd docker/worker && docker compose up
+    requirements:
+      tools:
+        docker: "*"
+      checks:
+        - worker-env-configured
+    depends_on:
+      - setup:env:worker
+    effects:
+      network: true
+      external_state:
+        - docker
+    runtime:
+      kind: service
+      surfaces:
+        worker:
+          project:
+            host:
+              primary: true
+    safe_for_agent: false
+workflows:
+  default: app
+  verify:
+    intent: ci_verification
+    description: Root CI verification path for Flowise
+    notes: |
+      This aligns with `.github/workflows/main.yml`:
+      install, lint, build, coverage tests, then Cypress verification through
+      the repo-local CLI-equivalent Cypress lane.
+    setup:
+      task: install
+    run:
+      task: verify:ci:full
+  app:
+    intent: local_development
+    description: Canonical Flowise contributor development workflow
+    notes: |
+      This follows README/CONTRIBUTING setup and development run path.
+    prepare:
+      task: setup:env:server
+    setup:
+      task: install
+    run:
+      task: dev
+    readiness:
+      surfaces:
+        - api
+        - dev-ui
+    exposes:
+      - surface: dev-ui
+      - surface: api
+  app:prod:
+    intent: local_development
+    description: Local production startup workflow from built artifacts
+    notes: |
+      This follows the documented `pnpm build` then `pnpm start` flow.
+    prepare:
+      task: setup:env:server
+    setup:
+      task: build
+    run:
+      task: start
+    readiness:
+      surfaces:
+        - api
+        - app
+    exposes:
+      - surface: app
+      - surface: api
+  app:docker:
+    intent: packaged_runtime
+    description: Docker compose self-host workflow for Flowise
+    notes: |
+      This follows `docker/README.md` default compose path.
+    prepare:
+      task: setup:env:docker
+    run:
+      task: dev:docker
+    readiness:
+      surfaces:
+        - api
+        - app
+    exposes:
+      - surface: app
+      - surface: api
+  app:docker:queue:
+    intent: packaged_runtime
+    description: Docker queue-mode workflow for Flowise main and worker services
+    notes: |
+      This follows `docker/README.md` prebuilt queue compose path.
+    prepare:
+      task: setup:env:docker
+    run:
+      task: dev:docker:queue
+    readiness:
+      surfaces:
+        - api
+        - app
+    exposes:
+      - surface: app
+      - surface: api
+  worker:docker:
+    intent: packaged_runtime
+    description: Standalone Docker worker workflow for queue scaling
+    notes: |
+      This follows `docker/worker/README.md` worker startup path.
+    prepare:
+      task: setup:env:worker
+    run:
+      task: dev:docker:worker
+    readiness:
+      surfaces:
+        - worker
+    exposes:
+      - surface: worker
+checks:
+  - name: workspace-dependencies-installed
+    kind: file
+    severity: error
+    path: node_modules/.modules.yaml
+    expect: file
+    timeout: 10000
+  - name: server-env-configured
+    kind: file
+    severity: error
+    path: packages/server/.env
+    expect: file
+    timeout: 10000
+  - name: ui-env-configured
+    kind: file
+    severity: error
+    path: packages/ui/.env
+    expect: file
+    timeout: 10000
+  - name: docker-env-configured
+    kind: file
+    severity: error
+    path: docker/.env
+    expect: file
+    timeout: 10000
+  - name: worker-env-configured
+    kind: file
+    severity: error
+    path: docker/worker/.env
+    expect: file
+    timeout: 10000
+agent:
+  posture: readiness_strict
+  entrypoint: install
+  default_task: test:coverage
+  safe_tasks: []
+  verify_after_changes: []
+  writable_paths:
+    - packages
+    - docker
+    - package.json
+    - turbo.json
+  protected_paths:
+    - .env
+    - packages/server/.env
+    - packages/ui/.env
+    - docker/.env
+    - docker/worker/.env
+    - .github/workflows
+    - pnpm-lock.yaml
+    - pnpm-workspace.yaml
+    - ota.yaml
+  bootstrap:
+    ota:
+      note: Install ota only when it is missing and installation is approved.
+      sh: curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION=v1.6.16 sh
+      powershell: $env:OTA_VERSION='v1.6.16'; irm https://dist.ota.run/install.ps1 | iex
+  notes: |
+    This pressure-test contract intentionally stays on documented repo entrypoints:
+    root pnpm install/build/dev/start/test/lint and documented Docker compose flows.
+    It does not model release/publish workflows or cloud deployment guides in this slice.
+    Agent-safe task claims are intentionally empty in this slice because verification tasks
+    transitively depend on install/networked dependency hydration.
