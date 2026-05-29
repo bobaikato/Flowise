@@ -186,16 +186,16 @@ tasks:
     notes: |
       This maps directly to the root setup path in README and CI.
     category: setup
-    run: corepack pnpm install
+    run: corepack pnpm@10.26.0 install
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm install
+          run: corepack pnpm@10.26.0 install
         container:
           context: app
-          run: corepack pnpm install
+          run: corepack pnpm@10.26.0 install
     requirements:
       toolchains:
         - node
@@ -207,16 +207,16 @@ tasks:
     notes: |
       This maps directly to root CI lint execution.
     category: test
-    run: corepack pnpm lint
+    run: corepack pnpm@10.26.0 lint
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm lint
+          run: corepack pnpm@10.26.0 lint
         container:
           context: app
-          run: corepack pnpm lint
+          run: corepack pnpm@10.26.0 lint
     requirements:
       toolchains:
         - node
@@ -230,16 +230,16 @@ tasks:
     notes: |
       This maps to root contributor and CI build commands.
     category: build
-    run: corepack pnpm build
+    run: corepack pnpm@10.26.0 build
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm build
+          run: corepack pnpm@10.26.0 build
         container:
           context: app
-          run: corepack pnpm build
+          run: corepack pnpm@10.26.0 build
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
@@ -256,16 +256,16 @@ tasks:
       Flowise does not expose a standalone `typecheck` script at the root.
       The package build scripts are the authoritative TypeScript compile/typecheck surface.
     category: test
-    run: corepack pnpm --filter ./packages/server build && corepack pnpm --filter flowise-components build && corepack pnpm --filter @flowiseai/agentflow build && corepack pnpm --filter @flowiseai/observe build && corepack pnpm --filter flowise-api build
+    run: corepack pnpm@10.26.0 --filter ./packages/server build && corepack pnpm@10.26.0 --filter flowise-components build && corepack pnpm@10.26.0 --filter @flowiseai/agentflow build && corepack pnpm@10.26.0 --filter @flowiseai/observe build && corepack pnpm@10.26.0 --filter flowise-api build
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm --filter ./packages/server build && corepack pnpm --filter flowise-components build && corepack pnpm --filter @flowiseai/agentflow build && corepack pnpm --filter @flowiseai/observe build && corepack pnpm --filter flowise-api build
+          run: corepack pnpm@10.26.0 --filter ./packages/server build && corepack pnpm@10.26.0 --filter flowise-components build && corepack pnpm@10.26.0 --filter @flowiseai/agentflow build && corepack pnpm@10.26.0 --filter @flowiseai/observe build && corepack pnpm@10.26.0 --filter flowise-api build
         container:
           context: app
-          run: corepack pnpm --filter ./packages/server build && corepack pnpm --filter flowise-components build && corepack pnpm --filter @flowiseai/agentflow build && corepack pnpm --filter @flowiseai/observe build && corepack pnpm --filter flowise-api build
+          run: corepack pnpm@10.26.0 --filter ./packages/server build && corepack pnpm@10.26.0 --filter flowise-components build && corepack pnpm@10.26.0 --filter @flowiseai/agentflow build && corepack pnpm@10.26.0 --filter @flowiseai/observe build && corepack pnpm@10.26.0 --filter flowise-api build
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
@@ -281,16 +281,16 @@ tasks:
     notes: |
       This maps directly to root contributor and CI test shape.
     category: test
-    run: corepack pnpm test
+    run: corepack pnpm@10.26.0 test
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm test
+          run: corepack pnpm@10.26.0 test
         container:
           context: app
-          run: corepack pnpm test
+          run: corepack pnpm@10.26.0 test
     requirements:
       toolchains:
         - node
@@ -304,16 +304,16 @@ tasks:
     notes: |
       This maps directly to the root CI coverage command in `.github/workflows/main.yml`.
     category: test
-    run: corepack pnpm test:coverage
+    run: corepack pnpm@10.26.0 test:coverage
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm test:coverage
+          run: corepack pnpm@10.26.0 test:coverage
         container:
           context: app
-          run: corepack pnpm test:coverage
+          run: corepack pnpm@10.26.0 test:coverage
     requirements:
       toolchains:
         - node
@@ -329,16 +329,16 @@ tasks:
       `pnpm lint`, `pnpm build`, then `pnpm test:coverage`.
       Use `verify:ci:full` to include the Cypress lane from the same workflow.
     category: test
-    run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage
+    run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage
+          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage
         container:
           context: app
-          run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage
+          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
@@ -356,16 +356,16 @@ tasks:
       repo-local Cypress CLI lane (`packages/server:cypress:ci`) as the
       non-Action equivalent for end-to-end verification.
     category: test
-    run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage && corepack pnpm cypress install && corepack pnpm --filter ./packages/server cypress:ci
+    run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage && corepack pnpm@10.26.0 cypress install && corepack pnpm@10.26.0 --filter ./packages/server cypress:ci
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage && corepack pnpm cypress install && corepack pnpm --filter ./packages/server cypress:ci
+          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage && corepack pnpm@10.26.0 cypress install && corepack pnpm@10.26.0 --filter ./packages/server cypress:ci
         container:
           context: app
-          run: corepack pnpm lint && corepack pnpm build && corepack pnpm test:coverage && corepack pnpm cypress install && corepack pnpm --filter ./packages/server cypress:ci
+          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage && corepack pnpm@10.26.0 cypress install && corepack pnpm@10.26.0 --filter ./packages/server cypress:ci
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -384,7 +384,7 @@ tasks:
     notes: |
       This is the documented local production startup path (`pnpm start`).
     category: dev
-    run: corepack pnpm start
+    run: corepack pnpm@10.26.0 start
     requirements:
       toolchains:
         - node
@@ -409,7 +409,7 @@ tasks:
       This maps directly to the documented contributor development loop (`pnpm dev`).
       README documents UI at port 8080 and API server at port 3000.
     category: dev
-    run: corepack pnpm dev
+    run: corepack pnpm@10.26.0 dev
     requirements:
       toolchains:
         - node
