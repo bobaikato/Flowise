@@ -32,7 +32,7 @@ on:
       ota_ref:
         description: Ota branch, tag, or commit to build for this matrix run
         required: false
-        default: bobai/gap3-smoke-verdict-contract
+        default: 1.6.18-implementation
   push:
     branches:
       - main
@@ -90,7 +90,7 @@ jobs:
         uses: ota-run/ota/.github/actions/install-ota-from-source@v1.6.16
         with:
           repository: ${{ github.event.inputs.ota_repository || 'ota-run/ota' }}
-          ref: ${{ github.event.inputs.ota_ref || 'bobai/gap3-smoke-verdict-contract' }}
+          ref: ${{ github.event.inputs.ota_ref || '1.6.18-implementation' }}
 
       - name: Contract pre-run gates (JSON)
         shell: bash
