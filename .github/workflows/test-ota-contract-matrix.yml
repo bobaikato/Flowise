@@ -143,6 +143,18 @@ jobs:
             exit 1
           fi
 
+      - name: Execute verify workflow (native)
+        if: ${{ matrix.lane == 'pre_run' && matrix.os_name == 'ubuntu' }}
+        timeout-minutes: 45
+        shell: bash
+        run: ota up --workflow verify --native --stream .
+
+      - name: Execute verify workflow (container)
+        if: ${{ matrix.lane == 'pre_run' && matrix.os_name == 'ubuntu' }}
+        timeout-minutes: 45
+        shell: bash
+        run: ota up --workflow verify --container --stream .
+
       - name: Runtime proof lane (JSON)
         if: ${{ matrix.runtime_proof }}
         shell: bash
