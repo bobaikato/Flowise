@@ -169,6 +169,8 @@ jobs:
         run: |
           set -euo pipefail
           matrix_dir=".ota/ci/matrix-${{ matrix.os_name }}-${{ matrix.lane }}"
+          chmod -R u+w packages/server/dist packages/components/dist packages/ui/dist 2>/dev/null || true
+          rm -rf packages/server/dist packages/components/dist packages/ui/dist 2>/dev/null || true
           ota tasks --json . > "${matrix_dir}/ota-tasks-all.json"
           jq -c '
             .tasks[]
