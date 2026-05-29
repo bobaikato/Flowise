@@ -156,6 +156,12 @@ jobs:
         shell: bash
         run: ota up --workflow verify --native --stream .
 
+      - name: Execute native smoke tasks (cross-OS non-Ubuntu)
+        if: ${{ matrix.lane == 'pre_run' && matrix.os_name != 'ubuntu' }}
+        timeout-minutes: 45
+        shell: bash
+        run: ota run lint --native --stream .
+
       - name: Execute verify workflow (container)
         if: ${{ matrix.lane == 'pre_run' && matrix.os_name == 'ubuntu' }}
         timeout-minutes: 45
