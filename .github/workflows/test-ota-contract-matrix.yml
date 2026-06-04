@@ -28,11 +28,11 @@ on:
       ota_repository:
         description: Ota source repository to build for this matrix run
         required: false
-        default: ota-run/ota
+        default: bobaikato/ota
       ota_ref:
         description: Ota branch, tag, or commit to build for this matrix run
         required: false
-        default: main
+        default: bobai/1.6.19-implementation
   push:
     branches:
       - main
@@ -89,8 +89,8 @@ jobs:
       - name: Install ota from source
         uses: ota-run/ota/.github/actions/install-ota-from-source@v1.6.18
         with:
-          repository: ${{ github.event.inputs.ota_repository || 'ota-run/ota' }}
-          ref: ${{ github.event.inputs.ota_ref || 'main' }}
+          repository: ${{ github.event.inputs.ota_repository || 'bobaikato/ota' }}
+          ref: ${{ github.event.inputs.ota_ref || 'bobai/1.6.19-implementation' }}
 
       - name: Activate pnpm for native pressure lane
         if: ${{ matrix.lane == 'pre_run' && matrix.os_name == 'ubuntu' }}
