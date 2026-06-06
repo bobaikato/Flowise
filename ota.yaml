@@ -1,11 +1,15 @@
 version: 1
+# Pressure-test note (local branch):
+# - Remove the packaged-runtime Docker lanes (`app:docker`, `app:docker:queue`, `worker:docker`)
+#   before an upstream PR unless we intentionally want the contract to claim the shipped compose and
+#   queue-worker self-host surfaces in addition to the core contributor verify/dev slice.
 project:
   name: Flowise
   description: Flowise monorepo readiness slice covering the documented pnpm contributor path, root CI verification surface, and Docker self-host/service workflows
   type: application
 metadata:
   ota:
-    minimum_version: "1.6.16"
+    minimum_version: "1.6.19"
 execution:
   default_context: host
   contexts:
@@ -30,7 +34,7 @@ toolchains:
     provider: corepack
     version: "^20.20.2"
     package_managers:
-      pnpm: "10.26.0"
+      pnpm: "^10.26.0"
 tools:
   docker:
     version: "*"
@@ -186,16 +190,16 @@ tasks:
     notes: |
       This maps directly to the root setup path in README and CI.
     category: setup
-    run: corepack pnpm@10.26.0 install
+    run: pnpm install
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 install
+          run: pnpm install
         container:
           context: app
-          run: corepack pnpm@10.26.0 install
+          run: pnpm install
     requirements:
       toolchains:
         - node
@@ -207,16 +211,16 @@ tasks:
     notes: |
       This maps directly to root CI lint execution.
     category: test
-    run: corepack pnpm@10.26.0 lint
+    run: pnpm lint
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 lint
+          run: pnpm lint
         container:
           context: app
-          run: corepack pnpm@10.26.0 lint
+          run: pnpm lint
     requirements:
       toolchains:
         - node
@@ -230,16 +234,16 @@ tasks:
     notes: |
       This maps to root contributor and CI build commands.
     category: build
-    run: corepack pnpm@10.26.0 build
+    run: pnpm build
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 build
+          run: pnpm build
         container:
           context: app
-          run: corepack pnpm@10.26.0 build
+          run: pnpm build
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
@@ -256,16 +260,16 @@ tasks:
       Flowise does not expose a standalone `typecheck` script at the root.
       The package build scripts are the authoritative TypeScript compile/typecheck surface.
     category: test
-    run: corepack pnpm@10.26.0 --filter ./packages/server build && corepack pnpm@10.26.0 --filter flowise-components build && corepack pnpm@10.26.0 --filter @flowiseai/agentflow build && corepack pnpm@10.26.0 --filter @flowiseai/observe build && corepack pnpm@10.26.0 --filter flowise-api build
+    run: pnpm --filter ./packages/server build && pnpm --filter flowise-components build && pnpm --filter @flowiseai/agentflow build && pnpm --filter @flowiseai/observe build && pnpm --filter flowise-api build
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 --filter ./packages/server build && corepack pnpm@10.26.0 --filter flowise-components build && corepack pnpm@10.26.0 --filter @flowiseai/agentflow build && corepack pnpm@10.26.0 --filter @flowiseai/observe build && corepack pnpm@10.26.0 --filter flowise-api build
+          run: pnpm --filter ./packages/server build && pnpm --filter flowise-components build && pnpm --filter @flowiseai/agentflow build && pnpm --filter @flowiseai/observe build && pnpm --filter flowise-api build
         container:
           context: app
-          run: corepack pnpm@10.26.0 --filter ./packages/server build && corepack pnpm@10.26.0 --filter flowise-components build && corepack pnpm@10.26.0 --filter @flowiseai/agentflow build && corepack pnpm@10.26.0 --filter @flowiseai/observe build && corepack pnpm@10.26.0 --filter flowise-api build
+          run: pnpm --filter ./packages/server build && pnpm --filter flowise-components build && pnpm --filter @flowiseai/agentflow build && pnpm --filter @flowiseai/observe build && pnpm --filter flowise-api build
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
@@ -281,16 +285,16 @@ tasks:
     notes: |
       This maps directly to root contributor and CI test shape.
     category: test
-    run: corepack pnpm@10.26.0 test
+    run: pnpm test
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 test
+          run: pnpm test
         container:
           context: app
-          run: corepack pnpm@10.26.0 test
+          run: pnpm test
     requirements:
       toolchains:
         - node
@@ -304,16 +308,16 @@ tasks:
     notes: |
       This maps directly to the root CI coverage command in `.github/workflows/main.yml`.
     category: test
-    run: corepack pnpm@10.26.0 test:coverage
+    run: pnpm test:coverage
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 test:coverage
+          run: pnpm test:coverage
         container:
           context: app
-          run: corepack pnpm@10.26.0 test:coverage
+          run: pnpm test:coverage
     requirements:
       toolchains:
         - node
@@ -329,16 +333,16 @@ tasks:
       `pnpm lint`, `pnpm build`, then `pnpm test:coverage`.
       Use `verify:ci:full` to include the Cypress lane from the same workflow.
     category: test
-    run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage
+    run: pnpm lint && pnpm build && pnpm test:coverage
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage
+          run: pnpm lint && pnpm build && pnpm test:coverage
         container:
           context: app
-          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage
+          run: pnpm lint && pnpm build && pnpm test:coverage
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
@@ -356,16 +360,16 @@ tasks:
       repo-local Cypress CLI lane (`packages/server:cypress:ci`) as the
       non-Action equivalent for end-to-end verification.
     category: test
-    run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage && corepack pnpm@10.26.0 cypress install && corepack pnpm@10.26.0 --filter ./packages/server cypress:ci
+    run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage && corepack pnpm@10.26.0 cypress install && corepack pnpm@10.26.0 --filter ./packages/server cypress:ci
+          run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
         container:
           context: app
-          run: corepack pnpm@10.26.0 lint && corepack pnpm@10.26.0 build && corepack pnpm@10.26.0 test:coverage && corepack pnpm@10.26.0 cypress install && corepack pnpm@10.26.0 --filter ./packages/server cypress:ci
+          run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -384,7 +388,7 @@ tasks:
     notes: |
       This is the documented local production startup path (`pnpm start`).
     category: dev
-    run: corepack pnpm@10.26.0 start
+    run: pnpm start
     requirements:
       toolchains:
         - node
@@ -409,7 +413,7 @@ tasks:
       This maps directly to the documented contributor development loop (`pnpm dev`).
       README documents UI at port 8080 and API server at port 3000.
     category: dev
-    run: corepack pnpm@10.26.0 dev
+    run: pnpm dev
     requirements:
       toolchains:
         - node
@@ -658,8 +662,8 @@ agent:
   bootstrap:
     ota:
       note: Install ota when missing so contributors and agents can run the readiness workflows declared in this contract.
-      sh: curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION=v1.6.16 sh
-      powershell: $env:OTA_VERSION='v1.6.16'; irm https://dist.ota.run/install.ps1 | iex
+      sh: curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION=v1.6.19 sh
+      powershell: $env:OTA_VERSION='v1.6.19'; irm https://dist.ota.run/install.ps1 | iex
   notes: |
     Use `ota tasks --use .` to list runnable tasks and review the agent-safe surface before execution.
     Use `ota run setup:env:server .`, `ota run setup:env:docker .`, and
@@ -670,4 +674,7 @@ agent:
     Use `ota up --workflow verify --container .` for the containerized CI-equivalent verify path.
     Use `ota up --workflow app:docker --native .`, `ota up --workflow app:docker:queue --native .`,
     and `ota up --workflow worker:docker --native .` for documented compose runtime paths.
+    This local pressure branch also claims packaged-runtime Docker workflows; keep those lanes only
+    if an upstream PR intentionally claims the shipped compose and queue-worker surfaces rather than
+    just the contributor verify/dev slice.
     No tasks are agent-safe by default in this slice.
