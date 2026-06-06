@@ -1,8 +1,4 @@
 version: 1
-# Pressure-test note (local branch):
-# - Remove the packaged-runtime Docker lanes (`app:docker`, `app:docker:queue`, `worker:docker`)
-#   before an upstream PR unless we intentionally want the contract to claim the shipped compose and
-#   queue-worker self-host surfaces in addition to the core contributor verify/dev slice.
 project:
   name: Flowise
   description: Flowise monorepo readiness slice covering the documented pnpm contributor path, root CI verification surface, and Docker self-host/service workflows
@@ -33,6 +29,7 @@ toolchains:
   node:
     provider: corepack
     version: "^20.20.2"
+    fulfillment: run
     package_managers:
       pnpm: "^10.26.0"
 tools:
@@ -674,7 +671,4 @@ agent:
     Use `ota up --workflow verify --container .` for the containerized CI-equivalent verify path.
     Use `ota up --workflow app:docker --native .`, `ota up --workflow app:docker:queue --native .`,
     and `ota up --workflow worker:docker --native .` for documented compose runtime paths.
-    This local pressure branch also claims packaged-runtime Docker workflows; keep those lanes only
-    if an upstream PR intentionally claims the shipped compose and queue-worker surfaces rather than
-    just the contributor verify/dev slice.
     No tasks are agent-safe by default in this slice.

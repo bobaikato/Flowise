@@ -49,6 +49,20 @@ Flowise has 3 different modules in a single mono repository.
     npm i -g pnpm
     ```
 
+#### Optional: Use Ota
+
+If you want a contract-driven setup path, install [Ota](https://ota.run/docs/install) and use the repo contract in `ota.yaml`.
+
+```bash
+ota doctor .
+ota up --workflow app --native .
+ota up --workflow verify --native .
+ota up --workflow verify --container .
+ota tasks --use .
+```
+
+See the [Ota docs](https://ota.run/docs) for the command reference and the [Ota blog](https://ota.run/blogs) for engineering notes and rollout examples.
+
 #### Step by step
 
 1. Fork the official [Flowise Github Repository](https://github.com/FlowiseAI/Flowise).
