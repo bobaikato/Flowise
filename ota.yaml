@@ -5,7 +5,7 @@ project:
   type: application
 metadata:
   ota:
-    minimum_version: "1.6.19"
+    minimum_version: "1.6.21"
 execution:
   default_context: host
   contexts:
@@ -385,7 +385,11 @@ tasks:
     notes: |
       This is the documented local production startup path (`pnpm start`).
     category: dev
-    run: pnpm start
+    launch:
+      kind: command
+      exe: pnpm
+      args:
+        - start
     requirements:
       toolchains:
         - node
@@ -410,7 +414,11 @@ tasks:
       This maps directly to the documented contributor development loop (`pnpm dev`).
       README documents UI at port 8080 and API server at port 3000.
     category: dev
-    run: pnpm dev
+    launch:
+      kind: command
+      exe: pnpm
+      args:
+        - dev
     requirements:
       toolchains:
         - node
@@ -434,9 +442,17 @@ tasks:
     context: host
     description: Run Flowise from the documented Docker compose stack
     notes: |
-      This follows the `docker/README.md` path: `cd docker && docker compose up`.
+      This follows the `docker/README.md` Docker compose path rooted under `docker/`.
     category: dev
-    run: cd docker && docker compose up
+    adapter_inputs:
+      compose:
+        cwd: docker
+    launch:
+      kind: command
+      exe: docker
+      args:
+        - compose
+        - up
     requirements:
       tools:
         docker: "*"
@@ -460,10 +476,19 @@ tasks:
     context: host
     description: Run Flowise queue mode from prebuilt Docker images
     notes: |
-      This follows `docker/README.md` queue mode path:
-      `docker compose -f docker-compose-queue-prebuilt.yml up`.
+      This follows the `docker/README.md` queue mode path rooted under `docker/`.
     category: dev
-    run: cd docker && docker compose -f docker-compose-queue-prebuilt.yml up
+    adapter_inputs:
+      compose:
+        cwd: docker
+        files:
+          - docker/docker-compose-queue-prebuilt.yml
+    launch:
+      kind: command
+      exe: docker
+      args:
+        - compose
+        - up
     requirements:
       tools:
         docker: "*"
@@ -487,10 +512,17 @@ tasks:
     context: host
     description: Run the standalone Flowise worker container compose stack
     notes: |
-      This follows `docker/worker/README.md` path:
-      `cd docker/worker && docker compose up`.
+      This follows the `docker/worker/README.md` worker path rooted under `docker/worker`.
     category: dev
-    run: cd docker/worker && docker compose up
+    adapter_inputs:
+      compose:
+        cwd: docker/worker
+    launch:
+      kind: command
+      exe: docker
+      args:
+        - compose
+        - up
     requirements:
       tools:
         docker: "*"
@@ -659,8 +691,8 @@ agent:
   bootstrap:
     ota:
       note: Install ota when missing so contributors and agents can run the readiness workflows declared in this contract.
-      sh: curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION=v1.6.19 sh
-      powershell: $env:OTA_VERSION='v1.6.19'; irm https://dist.ota.run/install.ps1 | iex
+      sh: curl -fsSL https://dist.ota.run/install.sh | OTA_VERSION=v1.6.21 sh
+      powershell: $env:OTA_VERSION='v1.6.21'; irm https://dist.ota.run/install.ps1 | iex
   notes: |
     Use `ota tasks --use .` to list runnable tasks and review the agent-safe surface before execution.
     Use `ota run setup:env:server .`, `ota run setup:env:docker .`, and
