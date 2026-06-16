@@ -32,7 +32,7 @@ on:
       ota_ref:
         description: Ota branch, tag, or commit to build for this matrix run
         required: false
-        default: 1.6.20-implementation
+        default: 1.6.21-implementation
   push:
     paths:
       - 'ota.yaml'
@@ -92,7 +92,7 @@ jobs:
         uses: ota-run/ota/.github/actions/install-ota-from-source@v1.6.19
         with:
           repository: ${{ github.event.inputs.ota_repository || 'ota-run/ota' }}
-          ref: ${{ github.event.inputs.ota_ref || '1.6.20-implementation' }}
+          ref: ${{ github.event.inputs.ota_ref || '1.6.21-implementation' }}
 
       - name: Contract pre-run gates (JSON)
         shell: bash
