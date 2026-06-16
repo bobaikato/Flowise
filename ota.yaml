@@ -27,9 +27,9 @@ execution:
           - packages/server/dist
 toolchains:
   node:
-    provider: corepack
     version: "^20.20.2"
-    fulfillment: run
+    fulfillment:
+      mode: run
     package_managers:
       pnpm: "^10.26.0"
 tools:
@@ -169,15 +169,31 @@ tasks:
         - docker/.env
   setup:env:worker:
     context: host
-    description: Create worker docker env file from template when missing
+    description: Derive the worker docker env file from the main docker env and enforce worker queue defaults
     notes: |
-      This follows `docker/worker/README.md`.
-      It only copies `docker/worker/.env.example` when `docker/worker/.env` is absent.
+      This follows `docker/worker/README.md`, which requires the worker queue configuration to
+      match the main server.
+      Ota derives `docker/worker/.env` from `docker/.env` when missing, then enforces the
+      worker-specific queue invariants so the worker workflow does not start from a sparse template
+      that leaves queue topology blank.
     category: setup
     action:
-      kind: copy_if_missing
-      from: docker/worker/.env.example
-      to: docker/worker/.env
+      kind: ensure_bundle
+      steps:
+        - kind: copy_if_missing
+          from: docker/.env
+          to: docker/worker/.env
+        - kind: ensure_env_file
+          path: docker/worker/.env
+          vars:
+            WORKER_PORT:
+              value: "5566"
+              mode: replace
+            MODE:
+              value: queue
+              mode: replace
+    depends_on:
+      - setup:env:docker:defaults
     effects:
       writes:
         - docker/worker/.env
@@ -528,6 +544,7 @@ tasks:
         docker: "*"
       checks:
         - worker-env-configured
+        - worker-env-queue-compatible
     depends_on:
       - setup:env:worker
     effects:
@@ -667,6 +684,18 @@ checks:
     path: docker/worker/.env
     expect: file
     timeout: 10000
+  - name: worker-env-queue-compatible
+    kind: env
+    severity: error
+    env:
+      path: docker/worker/.env
+      assertions:
+        - key: MODE
+          equals: queue
+        - key: REDIS_URL
+          url_host:
+            policy: not_loopback
+    timeout: 10000
 agent:
   posture: readiness_strict
   entrypoint: install
@@ -695,8 +724,10 @@ agent:
       powershell: $env:OTA_GIT_REV='08c270351c9870c82a39899161388bb250ad23c4'; & ([scriptblock]::Create((irm https://dist.ota.run/install.ps1))) -FromGit
   notes: |
     Use `ota tasks --use .` to list runnable tasks and review the agent-safe surface before execution.
-    Use `ota run setup:env:server .`, `ota run setup:env:docker .`, and
-    `ota run setup:env:worker .` to create env files from templates only when missing.
+    Use `ota run setup:env:server .` and `ota run setup:env:docker .` to create env files from
+    templates only when missing.
+    Use `ota run setup:env:worker .` to derive `docker/worker/.env` from `docker/.env` and enforce
+    the worker queue defaults before running the standalone worker path.
     Use `ota up --workflow app --native .` for contributor development.
     Use `ota up --workflow app:prod --native .` for local built startup validation.
     Use `ota up --workflow verify --native .` for CI-equivalent verification.
