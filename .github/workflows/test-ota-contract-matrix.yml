@@ -175,6 +175,16 @@ jobs:
         shell: bash
         run: ota up --workflow verify --container --stream .
 
+      - name: Materialize deterministic env setup for task coverage
+        if: ${{ matrix.lane == 'pre_run' && matrix.os_name == 'ubuntu' }}
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          ota run setup:env:server --native --stream .
+          ota run setup:env:ui --native --stream .
+          ota run setup:env:docker --native --stream .
+          ota run setup:env:worker --native --stream .
+
       - name: Dry-run all non-internal tasks (native coverage lane)
         if: ${{ matrix.lane == 'pre_run' && matrix.os_name == 'ubuntu' }}
         timeout-minutes: 120
