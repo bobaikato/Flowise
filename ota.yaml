@@ -784,8 +784,8 @@ agent:
     ota:
       note: Install ota when missing so contributors and agents can run the readiness workflows declared in this contract.
       source:
-        kind: git_rev
-        rev: 49109f21e739324b6948b45d871d441f9fc5eeab
+        kind: branch
+        branch: 1.6.22-implementation
   notes: |
     Use `ota tasks --use .` to list runnable tasks and review the agent-safe surface before execution.
     Use `ota run setup:env:server .` and `ota run setup:env:docker .` to create env files from
