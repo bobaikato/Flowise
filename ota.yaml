@@ -29,9 +29,10 @@ toolchains:
   node:
     version: "^20.20.2"
     fulfillment:
+      source: corepack
       mode: run
     package_managers:
-      pnpm: "^10.26.0"
+      pnpm: "10.26.0"
 tools:
   docker:
     version: "*"
@@ -210,7 +211,10 @@ tasks:
         kind: node_package_manager
         manager: pnpm
         mode: install
+        frozen_lockfile: false
         cwd: .
+    env:
+      CI: "false"
     execution:
       default_mode: native
       modes:
