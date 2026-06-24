@@ -208,6 +208,9 @@ tasks:
             MODE:
               value: queue
               mode: replace
+            REDIS_URL:
+              value: redis://redis:6379
+              mode: replace
     depends_on:
       - setup:env:docker:defaults
     effects:
