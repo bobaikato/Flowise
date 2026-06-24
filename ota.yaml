@@ -25,6 +25,21 @@ execution:
           - .pnpm-store
           - .turbo
           - packages/server/dist
+    app:ci:
+      backend: container
+      fulfillment: run
+      lifecycle: ephemeral
+      container:
+        image: node:20-bookworm
+        engines:
+          - docker
+          - podman
+      attachments:
+        isolated_paths:
+          - node_modules
+          - .pnpm-store
+          - .turbo
+          - packages/server/dist
 toolchains:
   node:
     version: "^20.20.2"
@@ -221,7 +236,7 @@ tasks:
         native:
           context: host
         container:
-          context: app
+          context: app:ci
     requirements:
       toolchains:
         - node
@@ -250,7 +265,7 @@ tasks:
             args:
               - lint
         container:
-          context: app
+          context: app:ci
           command:
             exe: pnpm
             args:
@@ -282,7 +297,7 @@ tasks:
             args:
               - build
         container:
-          context: app
+          context: app:ci
           command:
             exe: pnpm
             args:
@@ -311,7 +326,7 @@ tasks:
           context: host
           run: pnpm --filter ./packages/server build && pnpm --filter flowise-components build && pnpm --filter @flowiseai/agentflow build && pnpm --filter @flowiseai/observe build && pnpm --filter flowise-api build
         container:
-          context: app
+          context: app:ci
           run: pnpm --filter ./packages/server build && pnpm --filter flowise-components build && pnpm --filter @flowiseai/agentflow build && pnpm --filter @flowiseai/observe build && pnpm --filter flowise-api build
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
@@ -342,7 +357,7 @@ tasks:
             args:
               - test
         container:
-          context: app
+          context: app:ci
           command:
             exe: pnpm
             args:
@@ -374,7 +389,7 @@ tasks:
             args:
               - test:coverage
         container:
-          context: app
+          context: app:ci
           command:
             exe: pnpm
             args:
@@ -402,7 +417,7 @@ tasks:
           context: host
           run: pnpm lint && pnpm build && pnpm test:coverage
         container:
-          context: app
+          context: app:ci
           run: pnpm lint && pnpm build && pnpm test:coverage
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
@@ -429,7 +444,7 @@ tasks:
           context: host
           run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
         container:
-          context: app
+          context: app:ci
           run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
