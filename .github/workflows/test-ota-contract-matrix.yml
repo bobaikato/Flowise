@@ -80,7 +80,7 @@ jobs:
           node-version: 20.20.2
 
       - name: Set up ota
-        uses: ota-run/setup@v1.0.8
+        uses: ota-run/setup@51c4138180a59fa9bf6cacbc36396a1920080e64
         with:
           source: contract
           contract-path: ota.yaml
