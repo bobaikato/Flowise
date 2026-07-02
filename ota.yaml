@@ -5,7 +5,7 @@ project:
   type: application
 metadata:
   ota:
-    minimum_version: "1.6.21"
+    minimum_version: "1.6.23"
 execution:
   default_context: host
   contexts:
@@ -405,25 +405,38 @@ tasks:
     depends_on:
       - install
   verify:ci:
-    context: host
     description: Run the root CI verification core sequence
     notes: |
       This matches the core verification chain in `.github/workflows/main.yml`:
       `pnpm lint`, `pnpm build`, then `pnpm test:coverage`.
       Use `verify:ci:full` to include the Cypress lane from the same workflow.
     category: test
-    run: pnpm lint && pnpm build && pnpm test:coverage
+    aggregate:
+      tasks:
+        - lint
+        - build
+        - test:coverage
+  setup:cypress:browsers:
+    context: host
+    description: Install Cypress browsers for the repo-local CLI e2e lane
+    notes: |
+      This is the contract-owned bootstrap lane for `pnpm cypress install`.
+      Keep it separate from the verification aggregate so browser bootstrap stays explicit.
+    category: setup
+    prepare:
+      kind: tool_bootstrap
+      tool: cypress_browsers
+      source:
+        kind: node_package_manager
+        cwd: .
+        manager: pnpm
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: pnpm lint && pnpm build && pnpm test:coverage
         container:
           context: app:ci
-          run: pnpm lint && pnpm build && pnpm test:coverage
-    env:
-      NODE_OPTIONS: "--max_old_space_size=4096"
     requirements:
       toolchains:
         - node
@@ -431,24 +444,40 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
-  verify:ci:full:
+    effects:
+      network: true
+      network_kind: tool_bootstrap
+  test:e2e:cypress:
     context: host
-    description: Run a CLI-equivalent full CI verification path including Cypress
+    description: Run the repo-local server Cypress CI lane
     notes: |
-      This mirrors `.github/workflows/main.yml` core steps and adds the
-      repo-local Cypress CLI lane (`packages/server:cypress:ci`) as the
-      non-Action equivalent for end-to-end verification.
+      This is the non-Action equivalent for the `packages/server` Cypress verification step.
     category: test
-    run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
+    command:
+      exe: pnpm
+      args:
+        - --filter
+        - ./packages/server
+        - cypress:ci
     execution:
       default_mode: native
       modes:
         native:
           context: host
-          run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
+          command:
+            exe: pnpm
+            args:
+              - --filter
+              - ./packages/server
+              - cypress:ci
         container:
           context: app:ci
-          run: pnpm lint && pnpm build && pnpm test:coverage && pnpm cypress install && pnpm --filter ./packages/server cypress:ci
+          command:
+            exe: pnpm
+            args:
+              - --filter
+              - ./packages/server
+              - cypress:ci
     env:
       NODE_OPTIONS: "--max_old_space_size=4096"
       PUPPETEER_SKIP_DOWNLOAD: "true"
@@ -459,8 +488,22 @@ tasks:
         - workspace-dependencies-installed
     depends_on:
       - install
+      - setup:cypress:browsers
     effects:
       network: true
+  verify:ci:full:
+    description: Run a CLI-equivalent full CI verification path including Cypress
+    notes: |
+      This mirrors `.github/workflows/main.yml` core steps and adds the
+      repo-local Cypress CLI lane (`packages/server:cypress:ci`) as the
+      non-Action equivalent for end-to-end verification.
+    category: test
+    aggregate:
+      tasks:
+        - lint
+        - build
+        - test:coverage
+        - test:e2e:cypress
   start:
     context: host
     description: Start Flowise production server from built artifacts
@@ -788,7 +831,7 @@ agent:
       note: Install ota when missing so contributors and agents can run the readiness workflows declared in this contract.
       source:
         kind: branch
-        branch: 1.6.22-implementation
+        branch: 1.6.23-implementation
   notes: |
     Use `ota tasks --use .` to list runnable tasks and review the agent-safe surface before execution.
     Use `ota run setup:env:server .` and `ota run setup:env:docker .` to create env files from
